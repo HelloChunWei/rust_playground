@@ -1,14 +1,8 @@
-pub fn find_matches(content: &str, pattern: &str, mut writer: impl std::io::Write) {
-    for line in content.lines() {
-        if line.contains(pattern) {
-            writeln!(writer, "{}", line);
+pub fn match_user<'a>(key: String, name: &str, data: &'a serde_json::Value) -> Result<&'a serde_json::Value, anyhow::Error> {
+    for data in data.as_array().unwrap() {
+        if data[key.clone()] == name {
+            return Ok(data);
         }
     }
-}
-
-#[test]
-fn find_matches_test() {
-    let mut result = Vec::new();
-    find_matches("lorem ipsum\ndolor sit amet", "lorem", &mut result);
-    assert_eq!(result, b"lorem ipsum\n");
+    Err(anyhow::anyhow!("not found"))
 }

@@ -32,9 +32,8 @@ fn main() ->Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
     println!("Command: {}", args.command);
     println!("Path: {}", args.path.display());
-    // 解析 command 取出 .[] 和 select(.name == "foo")
-    // 只能用純字串處理？
-    // 型別有點小麻煩
+    // parse command and get .[] , select(.name == "foo")
+    // just only can split by string?
     let mut command = args.command.split("|");
 
     // get fisrt command like: .[] replace " and space
@@ -66,7 +65,7 @@ fn main() ->Result<(), Box<dyn std::error::Error>> {
         .with_context(|| format!("could not read file `{}`", args.path.display()))?;
     // parse json
     let json: serde_json::Value = serde_json::from_str(&content)?;
-    let user: &Value = match_user(key, &value ,&json)?;
+    let user: &Value = jq::match_user(key, &value ,&json)?;
     // pretty print
     // like
     // {
@@ -79,11 +78,3 @@ fn main() ->Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn match_user<'a>(key: String, name: &str, data: &'a serde_json::Value) -> Result<&'a serde_json::Value, anyhow::Error> {
-    for data in data.as_array().unwrap() {
-        if data[key.clone()] == name {
-            return Ok(data);
-        }
-    }
-    Err(anyhow::anyhow!("not found"))
-}

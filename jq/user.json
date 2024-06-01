@@ -1,11 +1,11 @@
 [
     {
         "name": "John",
-        "age": 25
+        "age": "25"
     },
     {
         "name": "G",
-        "age": 25,
+        "age": "25",
         "address": {
             "street": "123 Main St",
             "city": "New York"

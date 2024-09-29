@@ -105,6 +105,76 @@ pub fn merge_sort(arr: [u8; 7]) -> [u8; 7] {
     let sorted = sort(&arr);
     sorted.try_into().expect("incorrect length")
 }
+// 原始版本的 quick sort -> 空間複雜度超級高，一大堆Vec
+pub fn quick_sort(arr: [u8; 7]) -> [u8; 7] {
+    fn sort(list: &[u8]) -> Vec<u8> {
+        if list.len() <= 1 {
+            return list.to_vec();
+        }
+        let pivot = list[list.len() - 1];
+        let mut left: Vec<u8> = Vec::new();
+        let mut right: Vec<u8> = Vec::new();
+        let mut equal: Vec<u8> = Vec::new();
+
+        for &element in list.iter() {
+            if element < pivot {
+                left.push(element);
+            } else if element > pivot {
+                right.push(element);
+            } else {
+                equal.push(element);
+            }
+        }
+
+        let mut result = sort(&left);
+        result.extend_from_slice(&equal);
+        result.extend(sort(&right));
+        result
+    }
+    sort(&arr).try_into().expect("incorrect length")
+}
+
+//  Lomuto partition scheme
+pub fn quick_sort_optimization(arr: [u8; 7]) -> [u8; 7] {
+    // partition 是回傳整理過後的 pivot ，pivot 的左邊一定比 pivot 小 or 等於
+    // 右邊一定是比較大。
+    // 接著在 sort 的 if pi > 0 判斷 p是不是在 0 ，不是的話代表左邊必須要排序
+    fn partition(arr: &mut [u8], low: usize, high: usize) -> usize {
+        let pivot = arr[high];
+        let mut i = low;
+        for j in low..high {
+            if arr[j] <= pivot {
+                arr.swap(i, j);
+                i += 1;
+            }
+        }
+        arr.swap(i, high);
+        i
+    }
+    // 因為是針對原本的list 排序，所以sort是不會return 資料的
+    fn sort(arr: &mut [u8], low: usize, high: usize) {
+        println!("low: {}", low);
+        println!("high: {}", high);
+        if low < high {
+            println!("original arr: {:?}", arr);
+            let pi = partition(arr, low, high);
+            println!("pi: {}", pi);
+            println!("arr: {:?}", arr);
+            println!("----");
+            if pi > 0 {
+                sort(arr, low, pi - 1);
+            }
+            sort(arr, pi + 1, high);
+        }
+    }
+
+    let mut arr = arr;
+    let len = arr.len();
+    if len > 1 {
+        sort(&mut arr, 0, len - 1);
+    }
+    arr
+}
 
 #[cfg(test)]
 mod tests {
@@ -138,5 +208,16 @@ mod tests {
     fn merge_sort1() {
         let test5: [u8; 7] = [5, 8, 23, 8, 99, 1, 12];
         assert_eq!([1, 5, 8, 8, 12, 23, 99], merge_sort(test5));
+    }
+
+    #[test]
+    fn quick_sort1() {
+        let test5: [u8; 7] = [5, 8, 23, 8, 99, 1, 12];
+        assert_eq!([1, 5, 8, 8, 12, 23, 99], quick_sort(test5));
+    }
+    #[test]
+    fn quick_sort_optimization1() {
+        let test5: [u8; 7] = [5, 8, 23, 8, 99, 1, 12];
+        assert_eq!([1, 5, 8, 8, 12, 23, 99], quick_sort_optimization(test5));
     }
 }

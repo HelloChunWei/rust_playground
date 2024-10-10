@@ -6,7 +6,6 @@
 // 4. 時間複雜度：O(n^2)，不受輸入數據的影響
 // 5. 原地排序：不需要額外的存儲空間
 // 6. 不穩定排序：相等元素的相對位置可能改變
-
 // 結論：
 // - 優點：實現簡單，對小規模數據效果好
 // - 缺點：對大規模數據效率低，不適合已經接近排序的數據
@@ -176,6 +175,69 @@ pub fn quick_sort_optimization(arr: [u8; 7]) -> [u8; 7] {
     arr
 }
 
+struct PriorityQueueHeap {
+    heap: Vec<u8>,
+}
+trait GetMax {
+    fn new(arr: [u8; 7]) -> Self;
+    fn get_max(&mut self) -> Option<u8>;
+    fn swim(_index: usize, _list: &mut Vec<u8>);
+    fn sink(_index: usize, _list: &mut Vec<u8>);
+}
+
+// 優先隊列，整理過後，然後取出最大值
+impl GetMax for PriorityQueueHeap {
+    fn new(arr: [u8; 7]) -> Self {
+        let mut heap: Vec<u8> = Vec::new();
+        for i in 0..arr.len() {
+            heap.push(arr[i]);
+            Self::swim(i, &mut heap);
+        }
+        Self { heap }
+    }
+    // 上浮，子元素跟 parant 比，如果比parent 大，就swap ，不斷往上，
+    // 所以最大值會是 root (index 0)
+    fn swim(_index: usize, _list: &mut Vec<u8>) {
+        let mut k = _index;
+        while k > 0 && _list[k] > _list[k / 2] {
+            _list.swap(k / 2, k);
+            k = k / 2;
+        }
+    }
+    // 下沈，父元素與子元素比較，如果比子元素小，就往下交換。
+    // 這樣可以保持最大堆的性質
+    fn sink(_index: usize, _list: &mut Vec<u8>) {
+        let mut k = _index;
+        let n = _list.len();
+        while 2 * k + 1 < n {
+            let mut j = 2 * k + 1;
+            if j + 1 < n && _list[j] < _list[j + 1] {
+                j += 1;
+            }
+            if _list[k] >= _list[j] {
+                break;
+            }
+            _list.swap(k, j);
+            k = j;
+        }
+    }
+
+    fn get_max(&mut self) -> Option<u8> {
+        if self.heap.is_empty() {
+            return None;
+        }
+        // root 跟最後一個 index 交換，然後 pop 出來
+        // 然後再針對第一個元素 sink 下去
+        let last_index = self.heap.len() - 1;
+        self.heap.swap(0, last_index);
+        let max = self.heap.pop();
+        if !self.heap.is_empty() {
+            Self::sink(0, &mut self.heap);
+        }
+        max
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -219,5 +281,13 @@ mod tests {
     fn quick_sort_optimization1() {
         let test5: [u8; 7] = [5, 8, 23, 8, 99, 1, 12];
         assert_eq!([1, 5, 8, 8, 12, 23, 99], quick_sort_optimization(test5));
+    }
+    #[test]
+    fn priority_queue_heap1() {
+        let test5: [u8; 7] = [5, 8, 23, 8, 99, 1, 12];
+        let mut heap = PriorityQueueHeap::new(test5);
+        assert_eq!(Some(99), heap.get_max());
+        assert_eq!(Some(23), heap.get_max());
+        assert_eq!(Some(12), heap.get_max());
     }
 }

@@ -208,15 +208,19 @@ impl GetMax for PriorityQueueHeap {
     // 這樣可以保持最大堆的性質
     fn sink(_index: usize, _list: &mut Vec<u8>) {
         let mut k = _index;
+        // 2 K + 1 and 2K +2 為子節點
         let n = _list.len();
         while 2 * k + 1 < n {
             let mut j = 2 * k + 1;
+            // 2k +1 < 2K +2 的話， J = 2K +2
             if j + 1 < n && _list[j] < _list[j + 1] {
                 j += 1;
             }
+            // 代表 parent 比較大，不交換
             if _list[k] >= _list[j] {
                 break;
             }
+            // 交換， k = j 繼續 sink
             _list.swap(k, j);
             k = j;
         }
